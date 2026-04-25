@@ -946,7 +946,7 @@ function tryChip(el){ document.getElementById("feedInput").value=el.innerText; }
 ══════════════════════════════════════════════════════ */
 async function loadStats(){
   try{
-    const res=await fetch(API+"/stats");
+    const res=await fetch(API+"/stats",{signal:AbortSignal.timeout(8000)});
     if(!res.ok) throw new Error();
     const d=await res.json();
     // KPI strip
@@ -964,8 +964,25 @@ async function loadStats(){
     if(miniVals[0]) miniVals[0].innerText=(d.avg_confidence??0)+"%";
     const miniBarFill=document.querySelectorAll(".mini-fill");
     if(miniBarFill[0]) miniBarFill[0].style.width=(d.avg_confidence??0)+"%";
+    // cache in localStorage for next load
+    localStorage.setItem("lastStats", JSON.stringify(d));
   }catch(e){
-    console.warn("stats unavailable:",e.message);
+    console.warn("stats unavailable, using cached:",e.message);
+    // restore last known values instead of showing zeros
+    const cached=localStorage.getItem("lastStats");
+    if(cached){
+      try{
+        const d=JSON.parse(cached);
+        const vals=document.querySelectorAll(".kpi-value");
+        if(vals.length>=4){
+          vals[0].innerText=(d.positive??0).toLocaleString();
+          vals[1].innerText=(d.negative??0).toLocaleString();
+          vals[2].innerText=(d.neutral??0).toLocaleString();
+          vals[3].innerText=(d.avg_confidence??0)+"%";
+        }
+        updateDistribution(d.positive||0, d.negative||0, d.neutral||0);
+      }catch(_){}
+    }
   }
 }
 
