@@ -933,9 +933,9 @@ async function runInference(){
     await loadTrend();
     await loadHistory();
   }catch(err){
-    document.getElementById("resultHint").innerText="Backend connection failed";
+    document.getElementById("resultHint").innerText="Server waking up... retry in 20s";
     console.error(err);
-    alert("Could not reach backend at "+API+"\nMake sure uvicorn is running.");
+    
   }
 }
 function clearInput(){ document.getElementById("feedInput").value=""; }
